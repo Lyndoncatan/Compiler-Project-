@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compiler Project</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Compiler Analysis Tool</h1>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="button-group">
+                    <button id="openFileBtn" class="btn">Open File</button>
+                    <input type="file" id="fileInput" accept=".txt,.c,.cpp,.java" style="display: none;">
+
+                    <button id="lexicalBtn" class="btn" disabled>Lexical Analysis</button>
+                    <button id="syntaxBtn" class="btn" disabled>Syntax Analysis</button>
+                    <button id="semanticBtn" class="btn" disabled>Semantic Analysis</button>
+                    <button id="clearBtn" class="btn">Clear</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="result-section">
+                    <label>Result:</label>
+                    <div id="resultArea" class="text-area"></div>
+                </div>
+
+                <div class="code-section">
+                    <label>Code Text Area</label>
+                    <textarea id="codeArea" class="text-area" placeholder="Source code will be displayed here..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="lexical.js"></script>
+    <script src="syntax.js"></script>
+    <script src="semantic.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

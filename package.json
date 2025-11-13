@@ -1,0 +1,9 @@
+{
+    "name": "node-starter",
+    "private": true,
+    "scripts": {
+      "dev": "node index.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    }
+  }
+  
