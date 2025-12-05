@@ -1,11 +1,19 @@
 class LexicalAnalyzer {
     constructor() {
         this.keywords = [
+
             'int', 'float', 'double', 'char', 'void', 'if', 'else',
             'while', 'for', 'return', 'break', 'continue', 'switch',
             'case', 'default', 'struct', 'typedef', 'const', 'static',
-            'main', 'include', 'printf', 'scanf'
+            'main', 'include', 'printf', 'scanf',
+
+            'import', 'package', 'class', 'public', 'private', 'protected',
+            'new', 'this', 'super', 'extends', 'implements', 'interface',
+            'abstract', 'final', 'try', 'catch', 'throw', 'throws',
+            'boolean', 'byte', 'short', 'long', 'String', 'true', 'false',
+            'null', 'instanceof'
         ];
+
 
         this.operators = [
             '+', '-', '*', '/', '%', '=', '==', '!=', '<', '>',
