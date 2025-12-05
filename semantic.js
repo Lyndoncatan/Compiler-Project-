@@ -6,6 +6,19 @@ class SemanticAnalyzer {
         this.warnings = [];
         this.currentScope = 'global';
         this.functions = new Map();
+
+         
+        this.builtInIdentifiers = new Set([
+             
+            'printf', 'scanf', 'main', 'stdio', 'stdlib', 'string', 'math',
+             
+            'System', 'Scanner', 'String', 'Math', 'Object', 'Integer',
+            'Double', 'Float', 'Boolean', 'Character', 'out', 'in', 'err',
+            'java', 'util', 'io', 'lang', 'ArrayList', 'List', 'Map', 'Set',
+            'println', 'print', 'next', 'nextInt', 'nextLine', 'nextDouble',
+            'length', 'size', 'add', 'remove', 'get', 'set', 'toString',
+            'equals', 'hashCode', 'close'
+        ]);
     }
 
     analyze() {
@@ -18,6 +31,7 @@ class SemanticAnalyzer {
         this.checkTypeCompatibility();
         this.checkUndeclaredVariables();
         this.checkFunctionCalls();
+        this.checkUnusedVariables();  
 
         if (this.errors.length === 0) {
             return {
@@ -41,7 +55,31 @@ class SemanticAnalyzer {
         while (i < this.tokens.length) {
             const token = this.tokens[i];
 
-            if (token.type === 'KEYWORD' && ['int', 'float', 'double', 'char', 'void'].includes(token.value)) {
+             
+            if (token.type === 'KEYWORD' && (token.value === 'import' || token.value === 'include')) {
+                 
+                while (i < this.tokens.length &&
+                       !(this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === ';')) {
+                    i++;
+                }
+                if (i < this.tokens.length) i++; 
+                continue;
+            }
+
+            
+            if (token.type === 'SEPARATOR' && token.value === '#') {
+                
+                while (i < this.tokens.length &&
+                       !(this.tokens[i].type === 'OPERATOR' && this.tokens[i].value === '>')) {
+                    i++;
+                }
+                if (i < this.tokens.length) i++; 
+                continue;
+            }
+
+           
+            if (token.type === 'KEYWORD' &&
+                ['int', 'float', 'double', 'char', 'void', 'boolean', 'byte', 'short', 'long', 'String'].includes(token.value)) {
                 const type = token.value;
                 i++;
 
@@ -49,6 +87,7 @@ class SemanticAnalyzer {
                     const identifier = this.tokens[i];
                     i++;
 
+                  
                     if (i < this.tokens.length && this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === '(') {
                         if (this.functions.has(identifier.value)) {
                             this.errors.push({
@@ -64,10 +103,12 @@ class SemanticAnalyzer {
                         }
 
                         i++;
+                         
                         while (i < this.tokens.length && !(this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === ')')) {
                             i++;
                         }
                     } else {
+                        
                         const key = `${this.currentScope}:${identifier.value}`;
                         if (this.symbolTable.has(key)) {
                             this.errors.push({
@@ -83,6 +124,7 @@ class SemanticAnalyzer {
                             });
                         }
 
+                         
                         if (i < this.tokens.length && this.tokens[i].type === 'OPERATOR' && this.tokens[i].value === '=') {
                             const symbol = this.symbolTable.get(key);
                             if (symbol) symbol.initialized = true;
@@ -109,7 +151,9 @@ class SemanticAnalyzer {
                     const varKey = this.symbolTable.has(key) ? key : globalKey;
                     const symbol = this.symbolTable.get(varKey);
 
+                     
                     if (i + 1 < this.tokens.length && this.tokens[i + 1].type === 'OPERATOR' && this.tokens[i + 1].value === '=') {
+                         
                         i += 2;
 
                         if (i < this.tokens.length) {
@@ -132,16 +176,42 @@ class SemanticAnalyzer {
                                 }
                                 symbol.initialized = true;
                             } else if (valueToken.type === 'STRING_LITERAL') {
-                                if (symbol.type !== 'char' || !symbol.type.includes('*')) {
+                                if (symbol.type !== 'char' && symbol.type !== 'String') {
                                     this.warnings.push({
                                         line: token.line,
                                         message: `Assigning string literal to ${symbol.type} variable '${token.value}'`
                                     });
                                 }
                                 symbol.initialized = true;
+                            } else if (valueToken.type === 'IDENTIFIER') {
+                               
+                                const rightKey = `${this.currentScope}:${valueToken.value}`;
+                                const rightGlobalKey = `global:${valueToken.value}`;
+                                if (this.symbolTable.has(rightKey)) {
+                                    this.symbolTable.get(rightKey).used = true;
+                                } else if (this.symbolTable.has(rightGlobalKey)) {
+                                    this.symbolTable.get(rightGlobalKey).used = true;
+                                }
+                                symbol.initialized = true;
+                            }
+
+                             
+                            while (i < this.tokens.length &&
+                                   !(this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === ';')) {
+                                if (this.tokens[i].type === 'IDENTIFIER') {
+                                    const exprKey = `${this.currentScope}:${this.tokens[i].value}`;
+                                    const exprGlobalKey = `global:${this.tokens[i].value}`;
+                                    if (this.symbolTable.has(exprKey)) {
+                                        this.symbolTable.get(exprKey).used = true;
+                                    } else if (this.symbolTable.has(exprGlobalKey)) {
+                                        this.symbolTable.get(exprGlobalKey).used = true;
+                                    }
+                                }
+                                i++;
                             }
                         }
                     } else {
+                       
                         symbol.used = true;
                     }
                 }
@@ -153,28 +223,78 @@ class SemanticAnalyzer {
 
     checkUndeclaredVariables() {
         let i = 0;
-        const skipKeywords = new Set(['int', 'float', 'double', 'char', 'void', 'if', 'else', 'while',
-                                       'for', 'return', 'break', 'continue', 'printf', 'scanf', 'include', 'main']);
+        const skipKeywords = new Set([
+            'int', 'float', 'double', 'char', 'void', 'if', 'else', 'while',
+            'for', 'return', 'break', 'continue', 'printf', 'scanf', 'include', 'main',
+            'import', 'package', 'class', 'public', 'private', 'protected', 'static',
+            'new', 'this', 'super', 'boolean', 'byte', 'short', 'long', 'String',
+            'true', 'false', 'null'
+        ]);
 
         while (i < this.tokens.length) {
             const token = this.tokens[i];
 
-            if (token.type === 'IDENTIFIER' && !skipKeywords.has(token.value)) {
+           
+            if (token.type === 'KEYWORD' && (token.value === 'import' || token.value === 'include')) {
+                while (i < this.tokens.length &&
+                       !(this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === ';')) {
+                    i++;
+                }
+                if (i < this.tokens.length) i++;
+                continue;
+            }
+
+            
+            if (token.type === 'SEPARATOR' && token.value === '#') {
+                while (i < this.tokens.length &&
+                       !(this.tokens[i].type === 'OPERATOR' && this.tokens[i].value === '>')) {
+                    i++;
+                }
+                if (i < this.tokens.length) i++;
+                continue;
+            }
+
+             
+            if (token.type === 'IDENTIFIER' && i + 1 < this.tokens.length &&
+                this.tokens[i + 1].type === 'SEPARATOR' && this.tokens[i + 1].value === '.') {
+                
+                while (i < this.tokens.length &&
+                       (this.tokens[i].type === 'IDENTIFIER' ||
+                        (this.tokens[i].type === 'SEPARATOR' && this.tokens[i].value === '.'))) {
+                    i++;
+                }
+                continue;
+            }
+
+          
+            if (token.type === 'IDENTIFIER' &&
+                !skipKeywords.has(token.value) &&
+                !this.builtInIdentifiers.has(token.value)) {
+
+               
                 if (i > 0 && this.tokens[i - 1].type === 'KEYWORD' &&
-                    ['int', 'float', 'double', 'char', 'void'].includes(this.tokens[i - 1].value)) {
+                    ['int', 'float', 'double', 'char', 'void', 'boolean', 'String'].includes(this.tokens[i - 1].value)) {
                     i++;
                     continue;
                 }
 
+                
+                if (i > 0 && this.tokens[i - 1].type === 'SEPARATOR' && this.tokens[i - 1].value === '.') {
+                    i++;
+                    continue;
+                }
+
+              
                 if (i + 1 < this.tokens.length && this.tokens[i + 1].type === 'SEPARATOR' &&
                     this.tokens[i + 1].value === '(') {
-                    if (!this.functions.has(token.value) && !['printf', 'scanf', 'main'].includes(token.value)) {
+                    if (!this.functions.has(token.value) && !this.builtInIdentifiers.has(token.value)) {
                         this.errors.push({
                             line: token.line,
                             message: `Function '${token.value}' is not declared`
                         });
                     }
                 } else {
+                     
                     const key = `${this.currentScope}:${token.value}`;
                     const globalKey = `global:${token.value}`;
 
