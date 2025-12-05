@@ -1,31 +1,60 @@
 class LexicalAnalyzer {
     constructor() {
+        // C Language Keywords
         this.keywords = [
-
-            'int', 'float', 'double', 'char', 'void', 'if', 'else',
-            'while', 'for', 'return', 'break', 'continue', 'switch',
-            'case', 'default', 'struct', 'typedef', 'const', 'static',
-            'main', 'include', 'printf', 'scanf', "malloc", "fgets", 
-            "sizeof", "stdin", "strcspn", "toupper", "strlen",
-             "copy", "strcpy", "copy", "free", 
-
-
-            'import', 'package', 'class', 'public', 'private', 'protected',
-            'new', 'this', 'super', 'extends', 'implements', 'interface',
-            'abstract', 'final', 'try', 'catch', 'throw', 'throws',
-            'boolean', 'byte', 'short', 'long', 'String', 'true', 'false',
-            'null', 'instanceof'
+            // Data Types
+            'int', 'float', 'double', 'char', 'void', 'long', 'short', 
+            'signed', 'unsigned', 'bool', '_Bool',
+            
+            // Control Flow
+            'if', 'else', 'switch', 'case', 'default', 'break', 'continue',
+            'for', 'while', 'do', 'goto', 'return',
+            
+            // Storage Classes
+            'auto', 'static', 'extern', 'register', 'const', 'volatile',
+            
+            // Derived Types
+            'struct', 'union', 'enum', 'typedef',
+            
+            // Other Keywords
+            'sizeof', 'inline', 'restrict',
+            
+            // Preprocessor Directives (commonly used)
+            'include', 'define', 'undef', 'ifdef', 'ifndef', 'endif',
+            'if', 'elif', 'else', 'pragma', 'error', 'warning',
+            
+            // Common Standard Library Functions
+            'printf', 'scanf', 'fprintf', 'fscanf', 'sprintf', 'sscanf',
+            'getchar', 'putchar', 'gets', 'puts', 'fgets', 'fputs',
+            'fopen', 'fclose', 'fread', 'fwrite', 'fseek', 'ftell',
+            'malloc', 'calloc', 'realloc', 'free',
+            'strlen', 'strcmp', 'strcpy', 'strcat', 'strncpy', 'strncat',
+            'strchr', 'strstr', 'strtok', 'strspn', 'strcspn',
+            'memcpy', 'memmove', 'memset', 'memcmp', 'memchr',
+            'atoi', 'atof', 'atol', 'strtol', 'strtod',
+            'toupper', 'tolower', 'isalpha', 'isdigit', 'isalnum',
+            'abs', 'sqrt', 'pow', 'ceil', 'floor', 'sin', 'cos', 'tan',
+            'exit', 'abort', 'system', 'getenv',
+            'rand', 'srand', 'time',
+            
+            // Common Variable Names to Ignore (not really keywords, but helps)
+            'main', 'argc', 'argv', 'NULL', 'EOF', 'FILE',
+            
+            // Common Header Names (for #include)
+            'stdio', 'stdlib', 'string', 'math', 'ctype', 'time',
+            'stdbool', 'stdint', 'limits', 'float', 'assert', 'errno',
+            'h' // for .h extension
         ];
-
 
         this.operators = [
             '+', '-', '*', '/', '%', '=', '==', '!=', '<', '>',
             '<=', '>=', '&&', '||', '!', '++', '--', '+=', '-=',
-            '*=', '/='
+            '*=', '/=', '%=', '&', '|', '^', '~', '<<', '>>',
+            '->', '.', '&=', '|=', '^=', '<<=', '>>='
         ];
 
         this.separators = [
-            '(', ')', '{', '}', '[', ']', ';', ',', '.', ':', '#'
+            '(', ')', '{', '}', '[', ']', ';', ',', '.', ':', '#', '?'
         ];
 
         this.tokens = [];
@@ -74,6 +103,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Single line comments
             if (char === '/' && i + 1 < sourceCode.length && sourceCode[i + 1] === '/') {
                 while (i < sourceCode.length && sourceCode[i] !== '\n') {
                     i++;
@@ -81,6 +111,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Multi-line comments
             if (char === '/' && i + 1 < sourceCode.length && sourceCode[i + 1] === '*') {
                 i += 2;
                 while (i < sourceCode.length - 1) {
@@ -94,6 +125,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // String literals
             if (char === '"') {
                 let start = i;
                 i++;
@@ -110,6 +142,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Character literals
             if (char === "'") {
                 let start = i;
                 i++;
@@ -126,6 +159,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Numbers
             if (this.isDigit(char)) {
                 let start = i;
                 while (i < sourceCode.length && (this.isDigit(sourceCode[i]) || sourceCode[i] === '.')) {
@@ -139,6 +173,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Identifiers and Keywords
             if (this.isLetter(char)) {
                 let start = i;
                 while (i < sourceCode.length && (this.isLetter(sourceCode[i]) || this.isDigit(sourceCode[i]))) {
@@ -153,6 +188,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Separators
             if (this.isSeparator(char)) {
                 this.tokens.push({
                     type: 'SEPARATOR',
@@ -163,6 +199,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Operators (including two-character operators)
             let opStart = i;
             let op = char;
             if (i + 1 < sourceCode.length) {
@@ -182,6 +219,7 @@ class LexicalAnalyzer {
                 continue;
             }
 
+            // Unknown tokens
             this.tokens.push({
                 type: 'UNKNOWN',
                 value: char,
@@ -199,7 +237,7 @@ class LexicalAnalyzer {
         }
 
         let output = 'LEXICAL ANALYSIS RESULTS\n';
-        output += '=' .repeat(60) + '\n\n';
+        output += '='.repeat(60) + '\n\n';
         output += `Total Tokens: ${this.tokens.length}\n\n`;
 
         const tokensByType = {};
