@@ -5,7 +5,10 @@ class LexicalAnalyzer {
             'int', 'float', 'double', 'char', 'void', 'if', 'else',
             'while', 'for', 'return', 'break', 'continue', 'switch',
             'case', 'default', 'struct', 'typedef', 'const', 'static',
-            'main', 'include', 'printf', 'scanf',
+            'main', 'include', 'printf', 'scanf', "malloc", "fgets", 
+            "sizeof", "stdin", "strcspn", "toupper", "strlen",
+             "copy", "strcpy", "copy", "free", 
+
 
             'import', 'package', 'class', 'public', 'private', 'protected',
             'new', 'this', 'super', 'extends', 'implements', 'interface',
